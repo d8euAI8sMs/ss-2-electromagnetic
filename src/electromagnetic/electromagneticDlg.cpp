@@ -22,6 +22,14 @@ using namespace math;
 
 // CelectromagneticDlg dialog
 
+const double c1 = 1,
+             c2 = 1;
+
+v3 v0 = { 0, 0, 1 },
+   e0 = { 1, 0, 0 },
+   b0 = { 0, 0, 1 };
+double dt = 0.01, t = 0;
+
 using points_t = std::list < point < double > > ;
 
 simple_list_plot < points_t > x_of_t, y_of_t, z_of_t, r_of_t;
@@ -35,13 +43,78 @@ BOOL visibility[] =
 UINT SimulationThreadProc(LPVOID pParam)
 {
     CelectromagneticDlg & dlg = * (CelectromagneticDlg *) pParam;
+    double _t = 0, _dt;
+    v3 _v0, _e0, _b0;
+    dlg.Invoke([&] ()
+    {
+        r_of_t.data->clear();
+        x_of_t.data->clear();
+        y_of_t.data->clear();
+        z_of_t.data->clear();
+        v_of_t.data->clear();
+        vx_of_t.data->clear();
+        vy_of_t.data->clear();
+        vz_of_t.data->clear();
+        _v0 = v0; _e0 = e0; _b0 = b0; _dt = dt;
+    });
+    dresult3 x_dx = { { 0, 0, 0 }, _v0 };
+    dfunc3_t system = model::make_electromagnetic_dfunc(_e0, _b0, c1, c2);
+    points_t _r, _x, _y, _z, _v, _vx, _vy, _vz;
+    size_t iteration = 0;
     while (dlg.m_bWorking)
     {
-        Sleep(100);
-        dlg.Invoke([&dlg] ()
+        _r.emplace_back(_t, norm(x_dx.x));
+        _x.emplace_back(_t, x_dx.x.x);
+        _y.emplace_back(_t, x_dx.x.y);
+        _z.emplace_back(_t, x_dx.x.z);
+        _v.emplace_back(_t, norm(x_dx.dx));
+        _vx.emplace_back(_t, x_dx.dx.x);
+        _vy.emplace_back(_t, x_dx.dx.y);
+        _vz.emplace_back(_t, x_dx.dx.z);
+        if ((iteration % 20) == 0)
         {
-            //
-        });
+            dlg.Invoke([&] ()
+            {
+                t = _t;
+                dlg.UpdateData(FALSE);
+                r_of_t.data->splice(r_of_t.data->end(), std::move(_r));
+                x_of_t.data->splice(x_of_t.data->end(), std::move(_x));
+                y_of_t.data->splice(y_of_t.data->end(), std::move(_y));
+                z_of_t.data->splice(z_of_t.data->end(), std::move(_z));
+                v_of_t.data->splice(v_of_t.data->end(), std::move(_v));
+                vx_of_t.data->splice(vx_of_t.data->end(), std::move(_vx));
+                vy_of_t.data->splice(vy_of_t.data->end(), std::move(_vy));
+                vz_of_t.data->splice(vz_of_t.data->end(), std::move(_vz));
+                while (r_of_t.data->size() > 500)
+                {
+                    r_of_t.data->pop_front();
+                    x_of_t.data->pop_front();
+                    y_of_t.data->pop_front();
+                    z_of_t.data->pop_front();
+                    v_of_t.data->pop_front();
+                    vx_of_t.data->pop_front();
+                    vy_of_t.data->pop_front();
+                    vz_of_t.data->pop_front();
+                }
+                r_of_t.auto_world->clear();
+                v_of_t.auto_world->clear();
+                if (r_of_t.view->visible)  r_of_t.auto_world->adjust(*r_of_t.data);
+                if (x_of_t.view->visible)  r_of_t.auto_world->adjust(*x_of_t.data);
+                if (y_of_t.view->visible)  r_of_t.auto_world->adjust(*y_of_t.data);
+                if (z_of_t.view->visible)  r_of_t.auto_world->adjust(*z_of_t.data);
+                if (v_of_t.view->visible)  v_of_t.auto_world->adjust(*v_of_t.data);
+                if (vx_of_t.view->visible) v_of_t.auto_world->adjust(*vx_of_t.data);
+                if (vy_of_t.view->visible) v_of_t.auto_world->adjust(*vy_of_t.data);
+                if (vz_of_t.view->visible) v_of_t.auto_world->adjust(*vz_of_t.data);
+                r_of_t.auto_world->flush();
+                v_of_t.auto_world->flush();
+                dlg.m_cXyzPlot.RedrawWindow();
+                dlg.m_cVxyzPlot.RedrawWindow();
+            });
+        }
+        x_dx = rk4_solve(system, _t, _dt, x_dx.x, x_dx.dx);
+        _t += _dt;
+        ++iteration;
     }
     return 0;
 }
@@ -59,6 +132,17 @@ void CelectromagneticDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_XYZ_T, m_cXyzPlot);
     DDX_Control(pDX, IDC_VXYZ_T, m_cVxyzPlot);
+    DDX_Text(pDX, IDC_EDIT1, v0.x);
+    DDX_Text(pDX, IDC_EDIT2, v0.y);
+    DDX_Text(pDX, IDC_EDIT3, v0.z);
+    DDX_Text(pDX, IDC_EDIT4, e0.x);
+    DDX_Text(pDX, IDC_EDIT5, e0.y);
+    DDX_Text(pDX, IDC_EDIT6, e0.z);
+    DDX_Text(pDX, IDC_EDIT7, b0.x);
+    DDX_Text(pDX, IDC_EDIT8, b0.y);
+    DDX_Text(pDX, IDC_EDIT9, b0.z);
+    DDX_Text(pDX, IDC_EDIT10, dt);
+    DDX_Text(pDX, IDC_EDIT11, t);
     DDX_Control(pDX, IDC_CHECK1, m_aVisibilityChecks[0]);
     DDX_Control(pDX, IDC_CHECK2, m_aVisibilityChecks[1]);
     DDX_Control(pDX, IDC_CHECK3, m_aVisibilityChecks[2]);

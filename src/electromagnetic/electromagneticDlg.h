@@ -45,4 +45,8 @@ protected:
     friend UINT SimulationThreadProc(LPVOID pParam);
 public:
     afx_msg void OnBnClickedButton2();
+    afx_msg void OnBnClickedVisibilityCheck(UINT nID);
+    PlotStatic m_cXyzPlot;
+    PlotStatic m_cVxyzPlot;
+    CButton m_aVisibilityChecks[8];
 };

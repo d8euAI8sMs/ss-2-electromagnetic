@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <functional>
+
+#include <util/common/plot/PlotStatic.h>
+
 // CelectromagneticDlg dialog
 class CelectromagneticDlg : public CDialogEx
 {
@@ -21,10 +25,24 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
+    CWinThread * m_pWorkerThread;
+    volatile BOOL m_bWorking;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnBnClickedButton1();
+    virtual BOOL DestroyWindow();
+    void Invoke(const std::function < void () > & fn);
+    void StartSimulationThread();
+    void StopSimulationThread();
+protected:
+    afx_msg LRESULT OnInvoke(WPARAM wParam, LPARAM lParam);
+
+    friend UINT SimulationThreadProc(LPVOID pParam);
+public:
+    afx_msg void OnBnClickedButton2();
 };

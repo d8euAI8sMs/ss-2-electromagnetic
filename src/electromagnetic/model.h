@@ -46,7 +46,7 @@ namespace model
         double c2
     )
     {
-        return [&] (double, const math::v3 &, const math::v3 & u)
+        return [=] (double, const math::v3 &, const math::v3 & u)
         {
             return c1 * e + c2 * (u ^ b);
         };

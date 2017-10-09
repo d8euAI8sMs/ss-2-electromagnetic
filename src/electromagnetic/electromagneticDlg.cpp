@@ -110,6 +110,14 @@ UINT SimulationThreadProc(LPVOID pParam)
                 v_of_t.auto_world->flush();
                 dlg.m_cXyzPlot.RedrawWindow();
                 dlg.m_cVxyzPlot.RedrawWindow();
+                dlg.m_aVisibilityChecks[0].RedrawWindow();
+                dlg.m_aVisibilityChecks[1].RedrawWindow();
+                dlg.m_aVisibilityChecks[2].RedrawWindow();
+                dlg.m_aVisibilityChecks[3].RedrawWindow();
+                dlg.m_aVisibilityChecks[4].RedrawWindow();
+                dlg.m_aVisibilityChecks[5].RedrawWindow();
+                dlg.m_aVisibilityChecks[6].RedrawWindow();
+                dlg.m_aVisibilityChecks[7].RedrawWindow();
             });
         }
         x_dx = rk4_solve(system, _t, _dt, x_dx.x, x_dx.dx);

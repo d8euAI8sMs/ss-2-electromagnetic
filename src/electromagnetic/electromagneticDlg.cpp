@@ -200,7 +200,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
         .with_auto_viewport(ravp);
     r_of_t
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(255, 150, 0), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(255, 255, 255), 3))
         .with_data()
         .with_auto_viewport(ravp);
     vx_of_t

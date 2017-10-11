@@ -105,10 +105,14 @@ UINT SimulationThreadProc(LPVOID pParam)
 
             r_of_t.auto_world->flush();
             v_of_t.auto_world->flush();
+            dlg.m_cXyzPlot.RedrawBuffer();
+            dlg.m_cVxyzPlot.RedrawBuffer();
             dlg.Invoke([&] ()
             {
                 t = _t;
                 dlg.UpdateData(FALSE);
+                dlg.m_cXyzPlot.SwapBuffers();
+                dlg.m_cVxyzPlot.SwapBuffers();
                 dlg.m_cXyzPlot.RedrawWindow();
                 dlg.m_cVxyzPlot.RedrawWindow();
             });
@@ -234,6 +238,8 @@ BOOL CelectromagneticDlg::OnInitDialog()
 
     m_cXyzPlot.background = palette::brush();
     m_cVxyzPlot.background = palette::brush();
+    m_cXyzPlot.triple_buffered = true;
+    m_cVxyzPlot.triple_buffered = true;
 
     m_cXyzPlot.plot_layer.with(
         viewporter::create(

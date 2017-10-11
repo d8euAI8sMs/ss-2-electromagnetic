@@ -198,6 +198,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
     m_aVisibilityChecks[10].SetCheck(FALSE);
 
     auto_viewport_params params;
+    params.paddings = { 0.001, 0.001, 0.001, 0.001 };
     params.factors = { 0, 0, 0.1, 0.1 };
     auto_viewport < points_t > ::ptr_t ravp = min_max_auto_viewport < points_t > ::create();
     auto_viewport < points_t > ::ptr_t vavp = min_max_auto_viewport < points_t > ::create();

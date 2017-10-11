@@ -239,6 +239,9 @@ BOOL CelectromagneticDlg::OnInitDialog()
         .with_data()
         .with_auto_viewport(vavp);
 
+    m_cXyzPlot.background = palette::brush();
+    m_cVxyzPlot.background = palette::brush();
+
     m_cXyzPlot.plot_layer.with(
         viewporter::create(
             tick_drawable::create(
@@ -258,8 +261,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
                     5
                 ),
                 palette::pen(RGB(80, 80, 80)),
-                RGB(200, 200, 200),
-                palette::brush(RGB(0, 0, 0))
+                RGB(200, 200, 200)
             ),
             make_viewport_mapper(r_of_t.viewport_mapper)
         )
@@ -284,8 +286,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
                     5
                 ),
                 palette::pen(RGB(80, 80, 80)),
-                RGB(200, 200, 200),
-                palette::brush(RGB(0, 0, 0))
+                RGB(200, 200, 200)
             ),
             make_viewport_mapper(v_of_t.viewport_mapper)
         )

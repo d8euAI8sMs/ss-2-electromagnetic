@@ -1,4 +1,3 @@
-
 // electromagneticDlg.cpp : implementation file
 //
 
@@ -74,7 +73,7 @@ UINT SimulationThreadProc(LPVOID pParam)
             y_of_x.data->emplace_back(x_dx.x.x, x_dx.x.y);
             y_of_z.data->emplace_back(x_dx.x.z, x_dx.x.y);
             x_of_z.data->emplace_back(x_dx.x.z, x_dx.x.x);
-            if (r_of_t.data->size() > 100)
+            if (r_of_t.data->size() > 500)
             {
                 r_of_t.data->pop_front();
                 x_of_t.data->pop_front();
@@ -210,17 +209,17 @@ BOOL CelectromagneticDlg::OnInitDialog()
 
     x_of_t
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(255, 0, 0), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(255, 255, 0), 3))
         .with_data()
         .with_auto_viewport(ravp);
     y_of_t
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(0, 180, 0), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(0, 255, 255), 3))
         .with_data()
         .with_auto_viewport(ravp);
     z_of_t
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(0, 180, 180), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(155, 155, 155), 3))
         .with_data()
         .with_auto_viewport(ravp);
     r_of_t
@@ -255,12 +254,12 @@ BOOL CelectromagneticDlg::OnInitDialog()
         .with_auto_viewport(tavp);
     y_of_z
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(255, 0, 0), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(255, 255, 0), 3))
         .with_data()
         .with_auto_viewport(tavp);
     x_of_z
         .with_view()
-        .with_view_line_pen(plot::palette::pen(RGB(255, 150, 0), 3))
+        .with_view_line_pen(plot::palette::pen(RGB(0, 255, 255), 3))
         .with_data()
         .with_auto_viewport(tavp);
 

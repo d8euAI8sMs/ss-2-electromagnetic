@@ -73,51 +73,44 @@ UINT SimulationThreadProc(LPVOID pParam)
         _vz.emplace_back(_t, x_dx.dx.z);
         if ((iteration % 20) == 0)
         {
+            r_of_t.data->splice(r_of_t.data->end(), std::move(_r));
+            x_of_t.data->splice(x_of_t.data->end(), std::move(_x));
+            y_of_t.data->splice(y_of_t.data->end(), std::move(_y));
+            z_of_t.data->splice(z_of_t.data->end(), std::move(_z));
+            v_of_t.data->splice(v_of_t.data->end(), std::move(_v));
+            vx_of_t.data->splice(vx_of_t.data->end(), std::move(_vx));
+            vy_of_t.data->splice(vy_of_t.data->end(), std::move(_vy));
+            vz_of_t.data->splice(vz_of_t.data->end(), std::move(_vz));
+            while (r_of_t.data->size() > 500)
+            {
+                r_of_t.data->pop_front();
+                x_of_t.data->pop_front();
+                y_of_t.data->pop_front();
+                z_of_t.data->pop_front();
+                v_of_t.data->pop_front();
+                vx_of_t.data->pop_front();
+                vy_of_t.data->pop_front();
+                vz_of_t.data->pop_front();
+            }
+            r_of_t.auto_world->clear();
+            v_of_t.auto_world->clear();
+            if (r_of_t.view->visible)  r_of_t.auto_world->adjust(*r_of_t.data);
+            if (x_of_t.view->visible)  r_of_t.auto_world->adjust(*x_of_t.data);
+            if (y_of_t.view->visible)  r_of_t.auto_world->adjust(*y_of_t.data);
+            if (z_of_t.view->visible)  r_of_t.auto_world->adjust(*z_of_t.data);
+            if (v_of_t.view->visible)  v_of_t.auto_world->adjust(*v_of_t.data);
+            if (vx_of_t.view->visible) v_of_t.auto_world->adjust(*vx_of_t.data);
+            if (vy_of_t.view->visible) v_of_t.auto_world->adjust(*vy_of_t.data);
+            if (vz_of_t.view->visible) v_of_t.auto_world->adjust(*vz_of_t.data);
+
+            r_of_t.auto_world->flush();
+            v_of_t.auto_world->flush();
             dlg.Invoke([&] ()
             {
                 t = _t;
                 dlg.UpdateData(FALSE);
-                r_of_t.data->splice(r_of_t.data->end(), std::move(_r));
-                x_of_t.data->splice(x_of_t.data->end(), std::move(_x));
-                y_of_t.data->splice(y_of_t.data->end(), std::move(_y));
-                z_of_t.data->splice(z_of_t.data->end(), std::move(_z));
-                v_of_t.data->splice(v_of_t.data->end(), std::move(_v));
-                vx_of_t.data->splice(vx_of_t.data->end(), std::move(_vx));
-                vy_of_t.data->splice(vy_of_t.data->end(), std::move(_vy));
-                vz_of_t.data->splice(vz_of_t.data->end(), std::move(_vz));
-                while (r_of_t.data->size() > 500)
-                {
-                    r_of_t.data->pop_front();
-                    x_of_t.data->pop_front();
-                    y_of_t.data->pop_front();
-                    z_of_t.data->pop_front();
-                    v_of_t.data->pop_front();
-                    vx_of_t.data->pop_front();
-                    vy_of_t.data->pop_front();
-                    vz_of_t.data->pop_front();
-                }
-                r_of_t.auto_world->clear();
-                v_of_t.auto_world->clear();
-                if (r_of_t.view->visible)  r_of_t.auto_world->adjust(*r_of_t.data);
-                if (x_of_t.view->visible)  r_of_t.auto_world->adjust(*x_of_t.data);
-                if (y_of_t.view->visible)  r_of_t.auto_world->adjust(*y_of_t.data);
-                if (z_of_t.view->visible)  r_of_t.auto_world->adjust(*z_of_t.data);
-                if (v_of_t.view->visible)  v_of_t.auto_world->adjust(*v_of_t.data);
-                if (vx_of_t.view->visible) v_of_t.auto_world->adjust(*vx_of_t.data);
-                if (vy_of_t.view->visible) v_of_t.auto_world->adjust(*vy_of_t.data);
-                if (vz_of_t.view->visible) v_of_t.auto_world->adjust(*vz_of_t.data);
-                r_of_t.auto_world->flush();
-                v_of_t.auto_world->flush();
                 dlg.m_cXyzPlot.RedrawWindow();
                 dlg.m_cVxyzPlot.RedrawWindow();
-                dlg.m_aVisibilityChecks[0].RedrawWindow();
-                dlg.m_aVisibilityChecks[1].RedrawWindow();
-                dlg.m_aVisibilityChecks[2].RedrawWindow();
-                dlg.m_aVisibilityChecks[3].RedrawWindow();
-                dlg.m_aVisibilityChecks[4].RedrawWindow();
-                dlg.m_aVisibilityChecks[5].RedrawWindow();
-                dlg.m_aVisibilityChecks[6].RedrawWindow();
-                dlg.m_aVisibilityChecks[7].RedrawWindow();
             });
         }
         x_dx = rk4_solve(system, _t, _dt, x_dx.x, x_dx.dx);

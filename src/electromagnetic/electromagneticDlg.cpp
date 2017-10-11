@@ -22,11 +22,11 @@ using namespace math;
 
 // CelectromagneticDlg dialog
 
-const double c1 = 1,
+const double c1 = -1,
              c2 = 1;
 
-v3 v0 = { 0, 0, 1 },
-   e0 = { 1, 0, 0 },
+v3 v0 = { 1, 0, 0 },
+   e0 = { 0, 0, 0 },
    b0 = { 0, 0, 1 };
 double dt = 0.01, t = 0;
 

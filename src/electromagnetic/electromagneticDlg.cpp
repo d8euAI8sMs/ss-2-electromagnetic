@@ -22,7 +22,7 @@ using namespace math;
 // CelectromagneticDlg dialog
 
 const double c1 = -1,
-             c2 = 1;
+             c2 = -1;
 
 v3 v0 = { 1, 0, 0 },
    e0 = { 0, 0, 0 },

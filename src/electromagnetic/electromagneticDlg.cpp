@@ -102,6 +102,8 @@ UINT SimulationThreadProc(LPVOID pParam)
                 dlg.m_cXyzPlot.RedrawWindow();
                 dlg.m_cVxyzPlot.RedrawWindow();
             });
+
+            Sleep(16);
         }
         x_dx = rk4_solve(system, _t, _dt, x_dx.x, x_dx.dx);
         _t += _dt;

@@ -48,5 +48,5 @@ public:
     afx_msg void OnBnClickedVisibilityCheck(UINT nID);
     PlotStatic m_cXyzPlot;
     PlotStatic m_cVxyzPlot;
-    CButton m_aVisibilityChecks[8];
+    CButton m_aVisibilityChecks[11];
 };

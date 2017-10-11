@@ -34,6 +34,7 @@ using points_t = std::list < point < double > > ;
 
 simple_list_plot < points_t > x_of_t, y_of_t, z_of_t, r_of_t;
 simple_list_plot < points_t > vx_of_t, vy_of_t, vz_of_t, v_of_t;
+simple_list_plot < points_t > y_of_x, y_of_z, x_of_z;
 
 UINT SimulationThreadProc(LPVOID pParam)
 {
@@ -55,6 +56,9 @@ UINT SimulationThreadProc(LPVOID pParam)
     vx_of_t.data->clear();
     vy_of_t.data->clear();
     vz_of_t.data->clear();
+    y_of_x.data->clear();
+    y_of_z.data->clear();
+    x_of_z.data->clear();
     while (dlg.m_bWorking)
     {
         if ((iteration % 20) == 0)
@@ -67,6 +71,9 @@ UINT SimulationThreadProc(LPVOID pParam)
             vx_of_t.data->emplace_back(_t, x_dx.dx.x);
             vy_of_t.data->emplace_back(_t, x_dx.dx.y);
             vz_of_t.data->emplace_back(_t, x_dx.dx.z);
+            y_of_x.data->emplace_back(x_dx.x.x, x_dx.x.y);
+            y_of_z.data->emplace_back(x_dx.x.z, x_dx.x.y);
+            x_of_z.data->emplace_back(x_dx.x.z, x_dx.x.x);
             if (r_of_t.data->size() > 100)
             {
                 r_of_t.data->pop_front();
@@ -77,9 +84,13 @@ UINT SimulationThreadProc(LPVOID pParam)
                 vx_of_t.data->pop_front();
                 vy_of_t.data->pop_front();
                 vz_of_t.data->pop_front();
+                y_of_x.data->pop_front();
+                y_of_z.data->pop_front();
+                x_of_z.data->pop_front();
             }
             r_of_t.auto_world->clear();
             v_of_t.auto_world->clear();
+            y_of_x.auto_world->clear();
             if (r_of_t.view->visible)  r_of_t.auto_world->adjust(*r_of_t.data);
             if (x_of_t.view->visible)  r_of_t.auto_world->adjust(*x_of_t.data);
             if (y_of_t.view->visible)  r_of_t.auto_world->adjust(*y_of_t.data);
@@ -88,9 +99,13 @@ UINT SimulationThreadProc(LPVOID pParam)
             if (vx_of_t.view->visible) v_of_t.auto_world->adjust(*vx_of_t.data);
             if (vy_of_t.view->visible) v_of_t.auto_world->adjust(*vy_of_t.data);
             if (vz_of_t.view->visible) v_of_t.auto_world->adjust(*vz_of_t.data);
+            if (y_of_x.view->visible) y_of_x.auto_world->adjust(*y_of_x.data);
+            if (y_of_z.view->visible) y_of_x.auto_world->adjust(*y_of_z.data);
+            if (x_of_z.view->visible) y_of_x.auto_world->adjust(*x_of_z.data);
 
             r_of_t.auto_world->flush();
             v_of_t.auto_world->flush();
+            y_of_x.auto_world->flush();
             dlg.m_cXyzPlot.RedrawBuffer();
             dlg.m_cVxyzPlot.RedrawBuffer();
             dlg.Invoke([&] ()
@@ -144,6 +159,9 @@ void CelectromagneticDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_CHECK6, m_aVisibilityChecks[5]);
     DDX_Control(pDX, IDC_CHECK7, m_aVisibilityChecks[6]);
     DDX_Control(pDX, IDC_CHECK8, m_aVisibilityChecks[7]);
+    DDX_Control(pDX, IDC_CHECK9, m_aVisibilityChecks[8]);
+    DDX_Control(pDX, IDC_CHECK10, m_aVisibilityChecks[9]);
+    DDX_Control(pDX, IDC_CHECK11, m_aVisibilityChecks[10]);
 }
 
 BEGIN_MESSAGE_MAP(CelectromagneticDlg, CDialogEx)
@@ -152,7 +170,7 @@ BEGIN_MESSAGE_MAP(CelectromagneticDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BUTTON1, &CelectromagneticDlg::OnBnClickedButton1)
     ON_MESSAGE(WM_INVOKE, &CelectromagneticDlg::OnInvoke)
     ON_BN_CLICKED(IDC_BUTTON2, &CelectromagneticDlg::OnBnClickedButton2)
-    ON_COMMAND_RANGE(IDC_CHECK1, IDC_CHECK8, &CelectromagneticDlg::OnBnClickedVisibilityCheck)
+    ON_COMMAND_RANGE(IDC_CHECK1, IDC_CHECK11, &CelectromagneticDlg::OnBnClickedVisibilityCheck)
 END_MESSAGE_MAP()
 
 
@@ -167,21 +185,27 @@ BOOL CelectromagneticDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-    m_aVisibilityChecks[0].SetCheck(TRUE);
+    m_aVisibilityChecks[0].SetCheck(FALSE);
     m_aVisibilityChecks[1].SetCheck(TRUE);
     m_aVisibilityChecks[2].SetCheck(TRUE);
-    m_aVisibilityChecks[3].SetCheck(TRUE);
-    m_aVisibilityChecks[4].SetCheck(TRUE);
-    m_aVisibilityChecks[5].SetCheck(TRUE);
-    m_aVisibilityChecks[6].SetCheck(TRUE);
-    m_aVisibilityChecks[7].SetCheck(TRUE);
+    m_aVisibilityChecks[3].SetCheck(FALSE);
+    m_aVisibilityChecks[4].SetCheck(FALSE);
+    m_aVisibilityChecks[5].SetCheck(FALSE);
+    m_aVisibilityChecks[6].SetCheck(FALSE);
+    m_aVisibilityChecks[7].SetCheck(FALSE);
+    m_aVisibilityChecks[8].SetCheck(TRUE);
+    m_aVisibilityChecks[9].SetCheck(FALSE);
+    m_aVisibilityChecks[10].SetCheck(FALSE);
 
     auto_viewport_params params;
     params.factors = { 0, 0, 0.1, 0.1 };
     auto_viewport < points_t > ::ptr_t ravp = min_max_auto_viewport < points_t > ::create();
     auto_viewport < points_t > ::ptr_t vavp = min_max_auto_viewport < points_t > ::create();
+    auto_viewport < points_t > ::ptr_t tavp = min_max_auto_viewport < points_t > ::create();
     ravp->set_params(params);
     vavp->set_params(params);
+    params.factors = { 0.1, 0.1, 0.1, 0.1 };
+    tavp->set_params(params);
 
     x_of_t
         .with_view()
@@ -223,6 +247,23 @@ BOOL CelectromagneticDlg::OnInitDialog()
         .with_view_line_pen(plot::palette::pen(RGB(255, 150, 0), 3))
         .with_data()
         .with_auto_viewport(vavp);
+    y_of_x
+        .with_view()
+        .with_view_line_pen(plot::palette::pen(RGB(255, 255, 255), 3))
+        .with_data()
+        .with_auto_viewport(tavp);
+    y_of_z
+        .with_view()
+        .with_view_line_pen(plot::palette::pen(RGB(255, 0, 0), 3))
+        .with_data()
+        .with_auto_viewport(tavp);
+    x_of_z
+        .with_view()
+        .with_view_line_pen(plot::palette::pen(RGB(255, 150, 0), 3))
+        .with_data()
+        .with_auto_viewport(tavp);
+
+    OnBnClickedVisibilityCheck(0);
 
     m_cXyzPlot.background = palette::brush();
     m_cVxyzPlot.background = palette::brush();
@@ -259,7 +300,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
             tick_drawable::create(
                 layer_drawable::create(
                     std::vector < drawable::ptr_t > ({
-                        v_of_t.view, vx_of_t.view, vy_of_t.view, vz_of_t.view
+                        y_of_x.view, y_of_z.view, x_of_z.view
                     })
                 ),
                 const_n_tick_factory<axe::x>::create(
@@ -275,7 +316,7 @@ BOOL CelectromagneticDlg::OnInitDialog()
                 palette::pen(RGB(80, 80, 80)),
                 RGB(200, 200, 200)
             ),
-            make_viewport_mapper(v_of_t.viewport_mapper)
+            make_viewport_mapper(y_of_x.viewport_mapper)
         )
     );
 
@@ -402,4 +443,45 @@ void CelectromagneticDlg::OnBnClickedVisibilityCheck(UINT nID)
     vx_of_t.view->visible = (m_aVisibilityChecks[5].GetCheck() == TRUE);
     vy_of_t.view->visible = (m_aVisibilityChecks[6].GetCheck() == TRUE);
     vz_of_t.view->visible = (m_aVisibilityChecks[7].GetCheck() == TRUE);
+    switch (nID)
+    {
+    case IDC_CHECK9:
+        if (m_aVisibilityChecks[8].GetCheck() == TRUE)
+        {
+            m_aVisibilityChecks[9].SetCheck(FALSE);
+            m_aVisibilityChecks[10].SetCheck(FALSE);
+        }
+        else
+        {
+            m_aVisibilityChecks[8].SetCheck(TRUE);
+        }
+        break;
+    case IDC_CHECK10:
+        if (m_aVisibilityChecks[9].GetCheck() == TRUE)
+        {
+            m_aVisibilityChecks[8].SetCheck(FALSE);
+            m_aVisibilityChecks[10].SetCheck(FALSE);
+        }
+        else
+        {
+            m_aVisibilityChecks[9].SetCheck(TRUE);
+        }
+        break;
+    case IDC_CHECK11:
+        if (m_aVisibilityChecks[10].GetCheck() == TRUE)
+        {
+            m_aVisibilityChecks[9].SetCheck(FALSE);
+            m_aVisibilityChecks[8].SetCheck(FALSE);
+        }
+        else
+        {
+            m_aVisibilityChecks[10].SetCheck(TRUE);
+        }
+        break;
+    default:
+        break;
+    }
+    y_of_x .view->visible = (m_aVisibilityChecks[8].GetCheck() == TRUE);
+    y_of_z .view->visible = (m_aVisibilityChecks[9].GetCheck() == TRUE);
+    x_of_z .view->visible = (m_aVisibilityChecks[10].GetCheck() == TRUE);
 }

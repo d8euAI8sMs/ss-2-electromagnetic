@@ -29,11 +29,25 @@ v3 v0 = { 1, 0, 0 },
    b0 = { 0, 0, 1 };
 double dt = 0.01, t = 0;
 
-using points_t = std::list < point < double > > ;
+using points_t = std::list < dresult3 > ;
+using data_t   = util::forward_iterable < util::mapping_iterator < points_t, points_t::const_iterator, point < double > > > ;
 
-simple_list_plot < points_t > x_of_t, y_of_t, z_of_t, r_of_t;
-simple_list_plot < points_t > vx_of_t, vy_of_t, vz_of_t, v_of_t;
-simple_list_plot < points_t > y_of_x, y_of_z, x_of_z;
+simple_list_plot < data_t > x_of_t, y_of_t, z_of_t, r_of_t;
+simple_list_plot < data_t > vx_of_t, vy_of_t, vz_of_t, v_of_t;
+simple_list_plot < data_t > y_of_x, y_of_z, x_of_z;
+
+data_t::ptr_t make_data(util::ptr_t < points_t > p,
+                        std::function < point < double > (const dresult3 &) > mapper)
+{
+    return data_t::create
+    (
+        std::move(p),
+        util::make_begin_iterator_source < points_t > (),
+        util::make_end_iterator_source < points_t > (),
+        [mapper] (const points_t &, const points_t::const_iterator & it, size_t) { return mapper(*it); },
+        nullptr
+    );
+}
 
 UINT SimulationThreadProc(LPVOID pParam)
 {
@@ -44,48 +58,18 @@ UINT SimulationThreadProc(LPVOID pParam)
     {
         _v0 = v0; _e0 = e0; _b0 = b0; _dt = dt;
     });
-    dresult3 x_dx = { { 0, 0, 0 }, _v0 };
+    dresult3 x_dx = { 0, { 0, 0, 0 }, _v0 };
     dfunc3_t system = model::make_electromagnetic_dfunc(_e0, _b0, c1, c2);
     size_t iteration = 0;
-    r_of_t.data->clear();
-    x_of_t.data->clear();
-    y_of_t.data->clear();
-    z_of_t.data->clear();
-    v_of_t.data->clear();
-    vx_of_t.data->clear();
-    vy_of_t.data->clear();
-    vz_of_t.data->clear();
-    y_of_x.data->clear();
-    y_of_z.data->clear();
-    x_of_z.data->clear();
+    r_of_t.data->container->clear();
     while (dlg.m_bWorking)
     {
         if ((iteration % 20) == 0)
         {
-            r_of_t.data->emplace_back(_t, norm(x_dx.x));
-            x_of_t.data->emplace_back(_t, x_dx.x.x);
-            y_of_t.data->emplace_back(_t, x_dx.x.y);
-            z_of_t.data->emplace_back(_t, x_dx.x.z);
-            v_of_t.data->emplace_back(_t, norm(x_dx.dx));
-            vx_of_t.data->emplace_back(_t, x_dx.dx.x);
-            vy_of_t.data->emplace_back(_t, x_dx.dx.y);
-            vz_of_t.data->emplace_back(_t, x_dx.dx.z);
-            y_of_x.data->emplace_back(x_dx.x.x, x_dx.x.y);
-            y_of_z.data->emplace_back(x_dx.x.z, x_dx.x.y);
-            x_of_z.data->emplace_back(x_dx.x.z, x_dx.x.x);
-            if (r_of_t.data->size() > 500)
+            r_of_t.data->container->push_back(x_dx);
+            if (r_of_t.data->container->size() > 500)
             {
-                r_of_t.data->pop_front();
-                x_of_t.data->pop_front();
-                y_of_t.data->pop_front();
-                z_of_t.data->pop_front();
-                v_of_t.data->pop_front();
-                vx_of_t.data->pop_front();
-                vy_of_t.data->pop_front();
-                vz_of_t.data->pop_front();
-                y_of_x.data->pop_front();
-                y_of_z.data->pop_front();
-                x_of_z.data->pop_front();
+                r_of_t.data->container->pop_front();
             }
             r_of_t.auto_world->clear();
             v_of_t.auto_world->clear();
@@ -199,68 +183,70 @@ BOOL CelectromagneticDlg::OnInitDialog()
     auto_viewport_params params;
     params.paddings = { 0.001, 0.001, 0.001, 0.001 };
     params.factors = { 0, 0, 0.1, 0.1 };
-    auto_viewport < points_t > ::ptr_t ravp = min_max_auto_viewport < points_t > ::create();
-    auto_viewport < points_t > ::ptr_t vavp = min_max_auto_viewport < points_t > ::create();
-    auto_viewport < points_t > ::ptr_t tavp = min_max_auto_viewport < points_t > ::create();
+    auto_viewport < data_t > ::ptr_t ravp = min_max_auto_viewport < data_t > ::create();
+    auto_viewport < data_t > ::ptr_t vavp = min_max_auto_viewport < data_t > ::create();
+    auto_viewport < data_t > ::ptr_t tavp = min_max_auto_viewport < data_t > ::create();
     ravp->set_params(params);
     vavp->set_params(params);
     params.factors = { 0.1, 0.1, 0.1, 0.1 };
     tavp->set_params(params);
 
+    util::ptr_t < points_t > points = util::create < points_t > ();
+
     x_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 255, 0), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.x.x }; }))
         .with_auto_viewport(ravp);
     y_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(0, 255, 255), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.x.y }; }))
         .with_auto_viewport(ravp);
     z_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(155, 155, 155), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.x.z }; }))
         .with_auto_viewport(ravp);
     r_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 255, 255), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, norm(r.x) }; }))
         .with_auto_viewport(ravp);
     vx_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 0, 0), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.dx.x }; }))
         .with_auto_viewport(vavp);
     vy_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(0, 180, 0), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.dx.y }; }))
         .with_auto_viewport(vavp);
     vz_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(0, 180, 180), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, r.dx.z }; }))
         .with_auto_viewport(vavp);
     v_of_t
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 150, 0), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.t, norm(r.dx) }; }))
         .with_auto_viewport(vavp);
     y_of_x
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 255, 255), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.x.x, r.x.y }; }))
         .with_auto_viewport(tavp);
     y_of_z
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(255, 255, 0), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.x.z, r.x.y }; }))
         .with_auto_viewport(tavp);
     x_of_z
         .with_view()
         .with_view_line_pen(plot::palette::pen(RGB(0, 255, 255), 3))
-        .with_data()
+        .with_data(make_data(points, [] (const dresult3 & r) { return point < double > { r.x.z, r.x.x }; }))
         .with_auto_viewport(tavp);
 
     OnBnClickedVisibilityCheck(0);

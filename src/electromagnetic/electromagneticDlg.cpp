@@ -30,22 +30,22 @@ v3 v0 = { 1, 0, 0 },
 double dt = 0.01, t = 0;
 
 using points_t = std::list < dresult3 > ;
-using data_t   = util::forward_iterable < util::mapping_iterator < points_t, points_t::const_iterator, point < double > > > ;
+using data_t   = util::container_mapping_iterable_t < points_t, point < double > > ;
+
+
+points_t points;
 
 simple_list_plot < data_t > x_of_t, y_of_t, z_of_t, r_of_t;
 simple_list_plot < data_t > vx_of_t, vy_of_t, vz_of_t, v_of_t;
 simple_list_plot < data_t > y_of_x, y_of_z, x_of_z;
 
-data_t::ptr_t make_data(util::ptr_t < points_t > p,
+data_t::ptr_t make_data(const points_t & p,
                         std::function < point < double > (const dresult3 &) > mapper)
 {
-    return data_t::create
+    return util::make_container_mapping_iterable < point < double > >
     (
-        std::move(p),
-        util::make_begin_iterator_source < points_t > (),
-        util::make_end_iterator_source < points_t > (),
-        [mapper] (const points_t &, const points_t::const_iterator & it, size_t) { return mapper(*it); },
-        nullptr
+        p,
+        [mapper] (const points_t &, const points_t::const_iterator & it, size_t) { return mapper(*it); }
     );
 }
 
@@ -61,15 +61,15 @@ UINT SimulationThreadProc(LPVOID pParam)
     dresult3 x_dx = { 0, { 0, 0, 0 }, _v0 };
     dfunc3_t system = model::make_electromagnetic_dfunc(_e0, _b0, c1, c2);
     size_t iteration = 0;
-    r_of_t.data->container->clear();
+    points.clear();
     while (dlg.m_bWorking)
     {
         if ((iteration % 20) == 0)
         {
-            r_of_t.data->container->push_back(x_dx);
+            points.push_back(x_dx);
             if (r_of_t.data->container->size() > 500)
             {
-                r_of_t.data->container->pop_front();
+                points.pop_front();
             }
             r_of_t.auto_world->clear();
             v_of_t.auto_world->clear();
@@ -190,8 +190,6 @@ BOOL CelectromagneticDlg::OnInitDialog()
     vavp->set_params(params);
     params.factors = { 0.1, 0.1, 0.1, 0.1 };
     tavp->set_params(params);
-
-    util::ptr_t < points_t > points = util::create < points_t > ();
 
     x_of_t
         .with_view()
